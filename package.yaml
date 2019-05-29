@@ -1,10 +1,10 @@
 name:                aiiterator-game-9p
 version:             0.1.0.0
-github:              "githubuser/aiiterator-game-9p"
+github:              "johanjordaan/aiiterator-game-9p"
 license:             BSD3
-author:              "Author name here"
+author:              "johan jordaan"
 maintainer:          "example@example.com"
-copyright:           "2019 Author name here"
+copyright:           "2019 johan jordaan"
 
 extra-source-files:
 - README.md
@@ -25,6 +25,8 @@ dependencies:
 - http-types
 - text
 - aeson
+- array
+- random
 
 library:
   source-dirs: src
@@ -50,7 +52,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - aiiterator-game-9p
-    - scotty
-    - http-types
-    - text
-    - aeson
+    - hspec

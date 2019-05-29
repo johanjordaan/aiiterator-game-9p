@@ -6,10 +6,16 @@ module Lib
 
 import Web.Scotty
 import Network.HTTP.Types
+
 import Article
+import Game
 
 runServer :: IO ()
 runServer = scotty 3000 $ do
+  --get "/init" $ do
+    --initGame()
+
+
   get "/article" $ do
     json $ Article 13 "caption" "content" -- Call Article constructor and encode the result as JSON
   -- post article (json)
