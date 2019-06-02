@@ -56,6 +56,14 @@ incCoord c d = fst $ foldr (\i a -> let
   ([],1)
   (zip c d)
 
+validateDim :: Dim -> Bool
+validateDim d = foldr (\i a -> let
+    p = i>0
+    in p && a
+  )
+  True
+  d
+
 validateCoord :: Coord -> Dim -> Bool
 validateCoord c d = foldr (\i a -> let
     value = fst i

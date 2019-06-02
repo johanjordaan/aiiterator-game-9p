@@ -39,5 +39,10 @@ coordSpec = do
   describe "addToCoordInDim" $ do
     it "should add the value to the dimention" $ do {
       addToCoordInDim [1,2,3] 1 (-2) `shouldBe` [1,0,3];
-      addToCoordInDim [1,2,3] 2 19 `shouldBe` [1,2,22]; 
+      addToCoordInDim [1,2,3] 2 19 `shouldBe` [1,2,22];
+    }
+  describe "validateDim" $ do
+    it "should reject invalid dims" $ do {
+      validateDim [2,2,2] `shouldBe` True;
+      validateDim [0,2,2] `shouldBe` False;
     }

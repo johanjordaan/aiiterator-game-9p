@@ -1,5 +1,6 @@
 module Game where
 import Shuffle
+import Coord
 
 type InvalidParameter = String
 data Error = InvalidParameter String deriving (Show, Eq)
@@ -60,60 +61,69 @@ actionValue = ActionValue "cast" [targetValue,manaValue]
 
 ---------------------------------------
 
-data Position = Empty | NotEmpty Int deriving (Show, Eq)
 type PlayerId = String
 type Moves = Int
 data Player = Player PlayerId Moves deriving (Show, Eq)
 
 type Players = [Player]
-type Board = [Position]
+type GameState = CoordSpace
 data PlayerState = PlayerState {
+  getDims::Dim
   getPlayers::Players,
-  getBoard::Board,
-  getTargetBoard::Board
+  getTargetGameState::GameState,
+  getCurrentGameState::GameState
 } deriving Show
 
-startBoard :: Int -> Board
-startBoard size = (Empty : map NotEmpty [1 .. size-1])
 
-_initGame :: Int -> IO PlayerState
-_initGame size = do {
-  shuffledBoard <- shuffle (startBoard size);
-  return $ PlayerState [] shuffledBoard (startBoard size);
+_initGame :: Dim -> IO PlayerState
+_initGame d = do {
+  shuffledBoard <- shuffle (consCoordSpace d);
+  return $ PlayerState d [] (consCoordSpace d) shuffledBoard;
 }
 
-initGame :: Int -> Either Error (IO PlayerState)
-initGame size = if(size<=9) then Right $ _initGame size else Left $ (InvalidParameter "invalid size")
+initGame :: Dim -> Either Error (IO PlayerState)
+initGame d = if(validateDim d) then Right $ _initGame d else Left $ (InvalidParameter "invalid dim")
 
 joinGame :: PlayerId -> PlayerState -> Either Error PlayerState
-joinGame playerId (PlayerState players board target) =
-  if(length players ==0) then Right $ PlayerState ((Player playerId 0):players) board target
+joinGame playerId (PlayerState d players current target) =
+  if(length players ==0) then Right $ PlayerState d ((Player playerId 0):players) current target
   else Left $ (InvalidParameter "already at max (1) players")
 
-validIndexes :: Int -> [Int] -> [Int]
-validIndexes i b =
-  let l = round $ sqrt $ fromIntegral (length b)
-  in filter (\t -> t>0 && t<(l*l)) [i-1,i+1,i-l,i+l]
+getActions :: PlayerId -> PlayerState -> Either Error ActionDefs
+getActions playerId (PlayerState d players current target) = let
+  emptySpace = [1,1,1]
+  possibleMoves = foldr (\i a-> (addToCoordInDim emptySpace i 1):(addToCoordInDim emptySpace i (-1)):a ) [] [0..(length d)-1]
+  validMoves = filter (validateCoord d) (foldr (\i a-> (i+1):(i-1):a) [] d)
+  in undefined
 
-selectIndexes :: [Int] -> [a] -> [a]
-selectIndexes is l = map snd (filter (\i -> elem (fst i) is) (zip [0..] l))
 
-_getEmptyIndex :: Int -> Board -> Int
-_getEmptyIndex a [] = a
-_getEmptyIndex a (x:xs) = case x of Empty -> a; NotEmpty _ -> _getEmptyIndex (a+1) xs
 
-getEmptyIndex :: Board -> Int
-getEmptyIndex board = _getEmptyIndex 0 board
+
+
+--validIndexes :: Int -> [Int] -> [Int]
+--validIndexes i b =
+--  let l = round $ sqrt $ fromIntegral (length b)
+--  in filter (\t -> t>0 && t<(l*l)) [i-1,i+1,i-l,i+l]
+
+--selectIndexes :: [Int] -> [a] -> [a]
+--selectIndexes is l = map snd (filter (\i -> elem (fst i) is) (zip [0..] l))
+
+--_getEmptyIndex :: Int -> Board -> Int
+--_getEmptyIndex a [] = a
+--_getEmptyIndex a (x:xs) = case x of Empty -> a; NotEmpty _ -> _getEmptyIndex (a+1) xs
+
+--getEmptyIndex :: Board -> Int
+--getEmptyIndex board = _getEmptyIndex 0 board
 
 --selectIndexes (validIndexes  (getEmptyIndex sb) [0..9-1]) b
 
-getActions :: PlayerId -> PlayerState -> Either Error ActionDefs
-getActions playerId (PlayerState players board target) =
-  if (elem playerId (map (\(Player id _)->id) players)) then Right (
-    let  options = validIndexes  (getEmptyIndex board) [0..(length board)-1]
-    in   [ActionDef "swap_with" [SelectIntDef "tile" options 1 1 False]]
-  )
-  else Left (InvalidParameter "invalid playerId")
+--getActions :: PlayerId -> PlayerState -> Either Error ActionDefs
+--getActions playerId (PlayerState players board target) =
+--  if (elem playerId (map (\(Player id _)->id) players)) then Right (
+--    let  options = validIndexes  (getEmptyIndex board) [0..(length board)-1]
+--    in   [ActionDef "swap_with" [SelectIntDef "tile" options 1 1 False]]
+--  )
+--  else Left (InvalidParameter "invalid playerId")
 
-applyAction :: PlayerId -> PlayerState -> ActionValue -> Either Error PlayerState
-applyAction playerId (PlayerState players board target) action = undefined
+--applyAction :: PlayerId -> PlayerState -> ActionValue -> Either Error PlayerState
+--applyAction playerId (PlayerState players board target) action = undefined
