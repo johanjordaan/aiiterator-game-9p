@@ -34,21 +34,21 @@ gameSpec = do
       }
     }
 
-  describe "joinGame" $ do
-    it "should let a new the player join" $ do {
-      let state = PlayerState [] [Empty,NotEmpty 1,NotEmpty 2, NotEmpty 3] in do {
-        case (joinGame "johan" state) of {
-          Right playerState -> do {
-            (length (getPlayers playerState)) `shouldBe` 1;
-          }
-        }
-      }
-    }
-
-    it "should not let more than one player join" $ do {
-      let state = PlayerState [Player "lorraine" 0] [Empty,NotEmpty 1,NotEmpty 2, NotEmpty 3] in do {
-        case (joinGame "johan" state) of {
-          Left e -> e `shouldBe` (InvalidParameter "already at max (1) players");
-        }
-      }
-    }
+  --describe "joinGame" $ do
+  --  it "should let a new the player join" $ do {
+  --    let state = PlayerState [] [Empty,NotEmpty 1,NotEmpty 2, NotEmpty 3] in do {
+  --      case (joinGame "johan" state) of {
+  --        Right playerState -> do {
+  --          (length (getPlayers playerState)) `shouldBe` 1;
+  --        }
+  --      }
+  --    }
+  --  }
+  --
+  --  it "should not let more than one player join" $ do {
+  --    let state = PlayerState [Player "lorraine" 0] [Empty,NotEmpty 1,NotEmpty 2, NotEmpty 3] in do {
+  --      case (joinGame "johan" state) of {
+  --        Left e -> e `shouldBe` (InvalidParameter "already at max (1) players");
+  --      }
+  --    }
+  --  }
