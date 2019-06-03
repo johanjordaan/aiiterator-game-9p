@@ -1,100 +1,65 @@
 module Game where
 import Shuffle
 import Coord
+import Action
+import Data.List
 
 type InvalidParameter = String
 data Error = InvalidParameter String deriving (Show, Eq)
 
-data ParameterDef =
-    SelectStringDef String [String] Int Int Bool
-  | SelectIntDef String [Int] Int Int Bool
-  | IntDef String Int Int
-  | StringDef String Int deriving (Show)
-
-data ActionDef = ActionDef String [ParameterDef] deriving (Show)
-type ActionDefs = [ActionDef]
-
-targetDef = SelectStringDef "target" ["orc","human"] 1 1 False
-manaDef = IntDef "mana" 2 5
-actionDef = ActionDef "cast" [manaDef, targetDef]
-
-data ParameterValue =
-    SelectValue String [String]
-  | SelectIntValue String [Int]
-  | IntValue String Int
-  | StringValue String String deriving (Show)
-data ActionValue = ActionValue String [ParameterValue] deriving (Show)
-type ActionValues = [ActionValue]
-
-targetValue = SelectValue "target" ["orc"]
-manaValue = IntValue "mana" 2
-actionValue = ActionValue "cast" [targetValue,manaValue]
-
----------------------------------------
---data Dimentions = Dimentions [Int]
---data Coordinate = Coordinate [Int]
---type Current = Coordinate
---type Target = Coordinate
---data LocationType = EmptyLocation | NonEmptyLocation
---data Location = Location LocationType Current Target
---type Locations = [Locations]
-
---d2 = Dimentions [3,3]
-
---_initSpace ::  Locations -> Dimentions -> Locations
---_initSpace a [] = a
---_initSpace a (d:ds) = map (\i -> _initSpace a ds) [0..d-1]
-
---initSpace = _initSpace []
-
-
-
---initSquare :: Int -> Square
---initSquare value x y=
---  if value = 0 then Square EmptySquare Coordinate 0 0
---  else Square EmptySquare Coordinate 0 0
-
---initSquares :: Int -> Squares
---initSquares size = map initSquare [0..size-1]
-
-
-
----------------------------------------
-
 type PlayerId = String
 type Moves = Int
 data Player = Player PlayerId Moves deriving (Show, Eq)
-
 type Players = [Player]
+
+data Location = Location {
+  getCurrent::Coord,
+  getTarget::Coord
+} deriving Show
+type Locations = [Location]
+
 type GameState = CoordSpace
 data PlayerState = PlayerState {
-  getDims::Dim
+  getDims::Dim,
+  getZeroInd::Int,
   getPlayers::Players,
-  getTargetGameState::GameState,
-  getCurrentGameState::GameState
+  getLocations::Locations
 } deriving Show
 
+_findZeroInd locations target =
+  let
+    found = findIndex (\i -> (getCurrent i) == target ) locations
+  in case found of {
+    Just x -> x;
+    Nothing -> 0;
+  }
 
 _initGame :: Dim -> IO PlayerState
 _initGame d = do {
   shuffledBoard <- shuffle (consCoordSpace d);
-  return $ PlayerState d [] (consCoordSpace d) shuffledBoard;
+  let
+    l = zip shuffledBoard (consCoordSpace d)
+    locations = map (\i -> Location (fst i) (snd i)) l
+    zeroInd = _findZeroInd locations (zeroCoord d)
+  in return $ PlayerState d zeroInd [] locations;
 }
 
 initGame :: Dim -> Either Error (IO PlayerState)
 initGame d = if(validateDim d) then Right $ _initGame d else Left $ (InvalidParameter "invalid dim")
 
 joinGame :: PlayerId -> PlayerState -> Either Error PlayerState
-joinGame playerId (PlayerState d players current target) =
-  if(length players ==0) then Right $ PlayerState d ((Player playerId 0):players) current target
+joinGame playerId (PlayerState d zeroInd players locations) =
+  if(length players ==0) then Right $ PlayerState d zeroInd ((Player playerId 0):players) locations
   else Left $ (InvalidParameter "already at max (1) players")
 
 getActions :: PlayerId -> PlayerState -> Either Error ActionDefs
-getActions playerId (PlayerState d players current target) = let
-  emptySpace = [1,1,1]
-  possibleMoves = foldr (\i a-> (addToCoordInDim emptySpace i 1):(addToCoordInDim emptySpace i (-1)):a ) [] [0..(length d)-1]
-  validMoves = filter (validateCoord d) (foldr (\i a-> (i+1):(i-1):a) [] d)
-  in undefined
+getActions playerId (PlayerState d zeroInd players locations) =
+  let
+    currentZeroCoord = getCurrent $locations!!zeroInd
+    possibleMoves = foldr (\i a-> (addToCoordInDim currentZeroCoord i 1):(addToCoordInDim currentZeroCoord i (-1)):a ) [] [0..(length d)-1]
+    validMoves = filter (validateCoord d) possibleMoves
+    validMoveIndex = [1,2,3]
+  in Right $ [ActionDef "swap_with" [SelectIntDef "tile" validMoveIndex 1 1 False]]
 
 
 
