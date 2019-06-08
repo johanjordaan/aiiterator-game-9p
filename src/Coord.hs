@@ -32,19 +32,19 @@ zeroCoord d = map (*0) [0..(length d)-1]
 dimSize :: Dim -> Int
 dimSize d = (foldr (*) 1 d)
 
-toCoord :: Int -> Dim -> Coord
-toCoord i d = let
+toCoord :: Dim -> Int -> Coord
+toCoord d i = let
   dm = calcDm d
   r = calcR i dm
   in foldr (\i a-> (fst i):a) [snd (head r)] (reverse (tail r))
 
-fromCoord :: Coord -> Dim -> Int
-fromCoord c d = let
+fromCoord :: Dim -> Coord -> Int
+fromCoord d c = let
   dm = reverse $ 1:(drop 1 (reverse (calcDm d)))
   in foldr (\i a->((fst i)*(snd i))+a) 0 (zip c dm)
 
-incCoord :: Coord -> Dim -> Coord
-incCoord c d = fst $ foldr (\i a -> let
+incCoord :: Dim -> Coord -> Coord
+incCoord d c = fst $ foldr (\i a -> let
     carry = snd a
     newCoord = fst a
     newValue = (fst i)+carry
@@ -64,8 +64,8 @@ validateDim d = foldr (\i a -> let
   True
   d
 
-validateCoord :: Coord -> Dim -> Bool
-validateCoord c d = foldr (\i a -> let
+validateCoord :: Dim -> Coord -> Bool
+validateCoord d c = foldr (\i a -> let
     value = fst i
     limit = snd i
     in value<limit && value>=0 && a
@@ -80,24 +80,10 @@ addToCoordInDim c di v = let
   end = drop (di+1) c
   in beginning++((middle+v):end)
 
-
---incAllCoords :: Coord -> Dim -> [Coord]
---incAllCoords c d = foldr (\i a ->
---
---  )
---  ([],)
-
-
-
 consCoordSpace :: Dim -> CoordSpace
 consCoordSpace d = reverse $ foldr (\i a -> let
     lastCoord = head a
-    in (incCoord lastCoord d):a
+    in (incCoord d lastCoord):a
   )
   [zeroCoord d]
   [1..(dimSize d)-1]
-
-
--- 0 1 2    09 10 11    18 19 20  |  27 28
--- 3 4 5    12 13 14    21 22 23  |
--- 6 7 8    15 16 17    24 25 26  |

@@ -22,19 +22,19 @@ coordSpec = do
     }
   describe "fromCoord" $ do
     it "should return the index for a coordinate" $ do {
-      fromCoord [1,1] [2,2] `shouldBe` 3;
-      fromCoord [2,1,1] [3,3,3] `shouldBe` 22;
+      fromCoord [2,2] [1,1]  `shouldBe` 3;
+      fromCoord [3,3,3] [2,1,1]  `shouldBe` 22;
     }
   describe "toCoord" $ do
     it "should return the coordinate for a index" $ do {
-      toCoord 3 [2,2] `shouldBe` [1,1];
-      toCoord 22 [3,3,3] `shouldBe` [2,1,1];
+      toCoord [2,2] 3  `shouldBe` [1,1];
+      toCoord [3,3,3] 22  `shouldBe` [2,1,1];
     }
   describe "validateCoord" $ do
     it "should check that a coord is vithin the dim limits" $ do {
-      validateCoord [2,2,2] [2,2,2] `shouldBe` False;
-      validateCoord [-1,2,0] [3,3,3] `shouldBe` False;
-      validateCoord [2,1,9] [3,5,10] `shouldBe` True;
+      validateCoord [2,2,2] [2,2,2]  `shouldBe` False;
+      validateCoord [3,3,3] [-1,2,0]  `shouldBe` False;
+      validateCoord [3,5,10] [2,1,9]  `shouldBe` True;
     }
   describe "addToCoordInDim" $ do
     it "should add the value to the dimention" $ do {

@@ -27,6 +27,7 @@ dependencies:
 - aeson
 - array
 - random
+- mtl
 
 library:
   source-dirs: src
