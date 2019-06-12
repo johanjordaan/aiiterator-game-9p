@@ -6,12 +6,13 @@ import Control.Monad
 import Data.Array.ST
 import Control.Monad.ST
 import Data.STRef
+import Control.Exception
 
 
 -- | Randomly shuffle a list
 --   /O(N)/
-shuffle :: [a] -> IO [a]
-shuffle xs = do
+shuffle_old :: [a] -> IO [a]
+shuffle_old xs = do
         ar <- newArray n xs
         forM [1..n] $ \i -> do
             j <- randomRIO (i,n)
@@ -23,6 +24,11 @@ shuffle xs = do
     n = length xs
     newArray :: Int -> [a] -> IO (IOArray Int a)
     newArray n xs =  newListArray (1,n) xs
+
+
+shuffle :: [a] -> Maybe StdGen -> IO [a]
+shuffle x Nothing = getStdRandom (shuffle' x)
+shuffle x (Just stdGen) = evaluate $ fst (shuffle' x stdGen)
 
 shuffle' :: [a] -> StdGen -> ([a],StdGen)
 shuffle' xs gen = runST (do
