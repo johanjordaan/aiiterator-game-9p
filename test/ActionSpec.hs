@@ -15,7 +15,7 @@ actionSpec = do
   describe "actionValue" $ do
     it "should create a valid actionValue" $ do {
       let
-        targetValue = SelectValue "target" ["orc"]
+        targetValue = SelectStringValue "target" ["orc"]
         manaValue = IntValue "mana" 2
         actionValue = ActionValue "cast" [targetValue,manaValue]
       in 1 `shouldBe` 1

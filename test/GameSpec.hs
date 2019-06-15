@@ -6,6 +6,7 @@ import Control.Exception
 
 import Game
 import Coord
+import Action
 
 gameSpec = do
   describe "_initGame" $ do
@@ -90,7 +91,7 @@ gameSpec = do
         r3 = getActions (Right "johan") r2;
       in case r3 of {
         Right actions -> do {
-          (show actions) `shouldBe` "[ActionDef \"swap_with\" [SelectIntDef \"tile\" [14,26,20,22] 1 1 False]]";
+          (show actions) `shouldBe` "[ActionDef \"swap_with\" [SelectStringDef \"tile\" [\"[1,1,2]\",\"[2,2,2]\",\"[2,0,2]\",\"[2,1,1]\"] 1 1 False]]";
           1 `shouldBe` 1
         }
       }
@@ -107,7 +108,7 @@ gameSpec = do
     }
 
   describe "_swapLocations" $ do
-    it "should swap tow locations" $ do {
+    it "should swap two locations" $ do {
       let
         d = [3,3]
         src = [ Location [0,0] [0,0]  ,
@@ -118,5 +119,21 @@ gameSpec = do
       in do {
         swap !! 0 `shouldBe` Location [1,1] [0,0];
         swap !! 1 `shouldBe` Location [0,0] [1,1];
+        (length swap) `shouldBe` (length src);
+      }
+    }
+
+
+  describe "_applyAction" $ do
+    it "should apply the action to the board" $ do {
+      let
+        r1 = _initGame [3,3,3] 123;
+        r2 = _joinGame "johan" r1;
+        actions = _getActions "johan" r2;
+        tileValue = SelectStringValue "tile" ["[1,1,2]"]
+        actionValues = [ActionValue "swap_with" [tileValue]]
+        r3 = _applyAction "johan" r2 actionValues
+      in do {
+        r2 `shouldNotBe` r3;
       }
     }

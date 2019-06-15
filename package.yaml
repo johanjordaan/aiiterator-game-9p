@@ -28,6 +28,7 @@ dependencies:
 - array
 - random
 - mtl
+- hashmap
 
 library:
   source-dirs: src

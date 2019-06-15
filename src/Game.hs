@@ -28,7 +28,7 @@ data PlayerState = PlayerState {
   getSeed::Int,
   getPlayers::Players,
   getLocations::Locations
-} deriving Show
+} deriving (Show,Eq)
 
 
 type EPlayerId = Either Error PlayerId
@@ -76,8 +76,8 @@ _getActions playerId (PlayerState dim seed players locations) =
     currentZeroCoord = getCurrent $ _findTargetCoord locations (zeroCoord dim)
     possibleMoves = foldr (\i a-> (addToCoordInDim currentZeroCoord i 1):(addToCoordInDim currentZeroCoord i (-1)):a ) [] [0..(length dim)-1]
     validMoves = filter (validateCoord dim) possibleMoves
-    validMoveIndex = map (fromCoord dim) validMoves
-  in [ActionDef "swap_with" [SelectIntDef "tile" validMoveIndex 1 1 False]]
+    validMovesStr = map show validMoves
+  in [ActionDef "swap_with" [SelectStringDef "tile" validMovesStr 1 1 False]]
 
 
 _validPlayer :: PlayerId -> Players -> Bool
@@ -97,16 +97,16 @@ _swapLocations l x y =
   let
     nx = Location (getCurrent y) (getTarget x)
     ny = Location (getCurrent x) (getTarget y)
-    nl = filter (\t -> (getTarget t) /= (getTarget x) && (getTarget t) /= (getTarget y)  ) l
+    nl = filter (\t -> ((getTarget t) /= (getTarget x)) && ((getTarget t) /= (getTarget y))  ) l
   in nx:ny:nl
 
 _applyAction :: PlayerId -> PlayerState -> ActionValues -> PlayerState
 _applyAction playerId playerState actionValues =
   let
     ActionValue actionName parameters = head actionValues
-    SelectIntValue parameterName values = head parameters
+    SelectStringValue parameterName values = head parameters
     PlayerState dim seed players locations = playerState
-    selectedCoord = toCoord dim (values !! 0)
+    selectedCoord = read (values !! 0) :: Coord
     selectedLocation = _findTargetCoord locations selectedCoord
     zeroLocation = _findTargetCoord locations (zeroCoord dim)
   in PlayerState dim seed players (_swapLocations locations zeroLocation selectedLocation)

@@ -10,7 +10,7 @@ data ActionDef = ActionDef String [ParameterDef] deriving (Show)
 type ActionDefs = [ActionDef]
 
 data ParameterValue =
-    SelectValue String [String]
+    SelectStringValue String [String]
   | SelectIntValue String [Int]
   | IntValue String Int
   | StringValue String String deriving (Show)
