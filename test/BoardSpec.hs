@@ -1,6 +1,7 @@
 module BoardSpec where
 import Test.Hspec
 
+import System.Random
 import Data.HashMap
 
 import Board
@@ -94,3 +95,48 @@ boardSpec = do
       (withinBounds [(0,2),(0,2)] [0,0]) `shouldBe` True;
       (withinBounds [(-10,2),(-10,2),(-10,3)] [-9,1,2]) `shouldBe` True;
     }
+
+
+  describe "add" $ do
+    it "should return the elemntwise addition of the two positions" $ do {
+      (add [1,2,3] [1,-1,3]) `shouldBe` [2,1,6];
+    }
+
+  describe "unit" $ do
+    it "should create a unit position" $ do {
+      (unit [(0,2),(0,2),(0,2)] 1 1) `shouldBe` [0,1,0];
+      (unit [(0,2),(0,2),(0,2)] 0 (-1)) `shouldBe` [-1,0,0];
+    }
+
+
+  describe "getMoves" $ do
+    it "should get the correct set of moves" $ do {
+      let
+        b1 = initialBoard [(0,3),(0,3),(0,3)]
+      in do {
+        (length (getMoves b1 [0,0,0])) `shouldBe` 3;
+        (getMoves b1 [0,0,0]) `shouldBe` [[1,0,0],[0,1,0],[0,0,1]];
+      }
+    }
+    it "should get the correct set of moves" $ do {
+      let
+        b1 = initialBoard [(0,3),(0,3),(0,3)]
+      in do {
+        (length (getMoves b1 [0,0,0])) `shouldBe` 3;
+        (getMoves b1 [0,0,0]) `shouldBe` [[1,0,0],[0,1,0],[0,0,1]];
+      }
+    }
+
+
+  describe "shuffleBoard" $ do {
+    it "should ransomly pick move for n times" $ do {
+      let
+        stdGen = mkStdGen 123
+        b0 = initialBoard [(0,3),(0,3)]
+        b = shuffleBoard b0 stdGen 2
+      in do {
+        (length (getState b) ) `shouldBe` 3;
+        (show (getState b)) `shouldBe` "fromList [([0,0],[1,1]),([0,1],[0,0]),([1,1],[0,1])]";
+      }
+    }
+  }
