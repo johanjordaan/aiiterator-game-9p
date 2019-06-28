@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib
+module Server
     ( runServer
     ) where
 
@@ -12,9 +12,9 @@ import Game
 
 runServer :: IO ()
 runServer = scotty 3000 $ do
-  --get "/init" $ do
-    --initGame()
-
+  post "/init" $ do
+    article <- jsonData :: ActionM Article -- Decode body of the POST request as an Article object
+    json article                           -- Send the encoded object back as JSON
 
   get "/article" $ do
     json $ Article 13 "caption" "content" -- Call Article constructor and encode the result as JSON

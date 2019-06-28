@@ -1,10 +1,14 @@
 module Game where
-import Shuffle
-import Coord
-import Action
+
 import Data.List
 import Control.Monad.Except
 import System.Random
+
+
+import Position
+import Bound
+import Board
+import Action
 
 
 type InvalidParameter = String
@@ -16,100 +20,79 @@ type Moves = Int
 data Player = Player PlayerId Moves deriving (Show, Eq)
 type Players = [Player]
 
-data Location = Location {
-  getCurrent::Coord,
-  getTarget::Coord
-} deriving (Eq,Show)
-type Locations = [Location]
-
-type GameState = CoordSpace
-data PlayerState = PlayerState {
-  getDims::Dim,
+data GameState = GameState {
   getSeed::Int,
   getPlayers::Players,
-  getLocations::Locations
+  getBoard::Board
 } deriving (Show,Eq)
 
 
 type EPlayerId = Either Error PlayerId
-type EPlayerState = Either Error PlayerState
+type EGameState = Either Error GameState
 type EActionDefs = Either Error ActionDefs
+type EActionValues = Either Error ActionValues
 
-_findTargetCoord :: Locations -> Coord -> Location
-_findTargetCoord locations target =
+
+_initGame :: Bounds -> Int -> Int -> GameState
+_initGame bounds seed numMoves =
   let
-    found = find (\i -> (getTarget i) == target ) locations
-  in case found of {
-    Just x -> x;
-  }
+    stdGen = mkStdGen seed
+    b0 = initialBoard bounds
+    b = shuffleBoard b0 stdGen numMoves
+  in GameState seed [] b;
 
-_initGame :: Dim -> Int -> PlayerState
-_initGame dim seed =
-  let
-    shuffledBoard = shuffle' (consCoordSpace dim) (mkStdGen seed);
-    l = zip (fst shuffledBoard) (consCoordSpace dim)
-    locations = map (\i -> Location (fst i) (snd i)) l
-  in PlayerState dim seed [] locations;
+initGame :: Bounds -> Int -> Int -> EGameState
+initGame bounds seed numMoves =
+  Right $ _initGame bounds seed numMoves
 
-initGame :: Dim -> Int -> EPlayerState
-initGame dim seed =
-  if(validateDim dim)
-    then Right $ _initGame dim seed
-    else Left (InvalidParameter "invalid dim")
+_joinGame :: PlayerId -> GameState -> GameState
+_joinGame playerId (GameState seed players board) =
+  GameState seed ((Player playerId 0):players) board
 
-_joinGame :: PlayerId -> PlayerState -> PlayerState
-_joinGame playerId (PlayerState dim seed players locations) =
-  PlayerState dim seed ((Player playerId 0):players) locations
-
-joinGame :: EPlayerId -> EPlayerState -> EPlayerState
-joinGame ePlayerId ePlayerState = do {
+joinGame :: EPlayerId -> EGameState -> EGameState
+joinGame ePlayerId eGameState = do {
   playerId <- ePlayerId;
-  playerState <- ePlayerState;
-  if(length (getPlayers playerState) /= 0)
+  gameState <- eGameState;
+  if(length (getPlayers gameState) /= 0)
     then Left $ (InvalidParameter "already at max (1) players")
-    else Right $ _joinGame playerId playerState
+    else Right $ _joinGame playerId gameState
 }
 
-_getActions :: PlayerId -> PlayerState -> ActionDefs
-_getActions playerId (PlayerState dim seed players locations) =
+
+_getActions :: PlayerId -> GameState -> ActionDefs
+_getActions playerId (GameState seed players board) =
   let
-    currentZeroCoord = getCurrent $ _findTargetCoord locations (zeroCoord dim)
-    possibleMoves = foldr (\i a-> (addToCoordInDim currentZeroCoord i 1):(addToCoordInDim currentZeroCoord i (-1)):a ) [] [0..(length dim)-1]
-    validMoves = filter (validateCoord dim) possibleMoves
+    validMoves = getMoves board (uniform (getBounds board) 0)
     validMovesStr = map show validMoves
   in [ActionDef "swap_with" [SelectStringDef "tile" validMovesStr 1 1 False]]
-
 
 _validPlayer :: PlayerId -> Players -> Bool
 _validPlayer playerId players = elem playerId (map (\(Player id _)->id) players)
 
-getActions :: EPlayerId -> EPlayerState -> EActionDefs
-getActions ePlayerId ePlayerState = do {
+getActions :: EPlayerId -> EGameState -> EActionDefs
+getActions ePlayerId eGameState = do {
   playerId <- ePlayerId;
-  playerState <- ePlayerState;
-  if not (_validPlayer playerId (getPlayers playerState))
+  gameState <- eGameState;
+  if not (_validPlayer playerId (getPlayers gameState))
     then Left (InvalidParameter "invalid playerId")
-    else Right $ _getActions playerId playerState
+    else Right $ _getActions playerId gameState
 }
 
-_swapLocations :: Locations -> Location -> Location -> Locations
-_swapLocations l x y =
-  let
-    nx = Location (getCurrent y) (getTarget x)
-    ny = Location (getCurrent x) (getTarget y)
-    nl = filter (\t -> ((getTarget t) /= (getTarget x)) && ((getTarget t) /= (getTarget y))  ) l
-  in nx:ny:nl
-
-_applyAction :: PlayerId -> PlayerState -> ActionValues -> PlayerState
-_applyAction playerId playerState actionValues =
+_applyAction :: PlayerId -> GameState -> ActionValues -> GameState
+_applyAction playerId gameState actionValues =
   let
     ActionValue actionName parameters = head actionValues
     SelectStringValue parameterName values = head parameters
-    PlayerState dim seed players locations = playerState
-    selectedCoord = read (values !! 0) :: Coord
-    selectedLocation = _findTargetCoord locations selectedCoord
-    zeroLocation = _findTargetCoord locations (zeroCoord dim)
-  in PlayerState dim seed players (_swapLocations locations zeroLocation selectedLocation)
+    GameState seed players board = gameState
+    move = read (values !! 0) :: Position
+  in GameState seed players (applyMove (getBoard gameState) move)
 
---applyAction :: PlayerId -> PlayerState -> ActionValue -> Either Error PlayerState
---applyAction playerId (PlayerState players board target) action = undefined
+applyAction :: EPlayerId -> EGameState -> EActionValues -> EGameState
+applyAction ePlayerId eGameState eActionValues = do {
+  playerId <- ePlayerId;
+  gameState <- eGameState;
+  actionValues <- eActionValues;
+  if not (_validPlayer playerId (getPlayers gameState))
+    then Left (InvalidParameter "invalid playerId")
+    else Right $ _applyAction playerId gameState actionValues
+}

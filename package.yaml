@@ -28,7 +28,7 @@ dependencies:
 - array
 - random
 - mtl
-- hashmap
+- unordered-containers
 
 library:
   source-dirs: src

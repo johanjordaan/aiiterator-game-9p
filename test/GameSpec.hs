@@ -4,37 +4,30 @@ import Test.Hspec
 import Control.Monad.Except
 import Control.Exception
 
+import Position
+import Bound
 import Game
-import Coord
+import Board
 import Action
 
 gameSpec = do
   describe "_initGame" $ do
     it "should create a new state with no players and a board of the correct type" $ do {
       let
-        playerState = _initGame [3,3] 123;
+        gameState = _initGame (toBounds [(0,3),(0,3)]) 123 3;
       in do {
-        (length (getPlayers playerState)) `shouldBe` 0;
-        --(getZeroInd playerState) `shouldBe` 0;
+        (length (getPlayers gameState)) `shouldBe` 0;
       }
     }
 
   describe "initGame" $ do
-    it "should return an error on incorrect board dims" $ do {
-      let
-        r1 = initGame [0,2,3] 123;
-      in case r1 of {
-        Left e -> e `shouldBe` (InvalidParameter "invalid dim");
-      }
-    }
-
     it "should return a valid state" $ do {
       let
-        r1 = initGame [3,3,3] 123;
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
       in case r1 of {
-        Right playerState -> do {
-          (length (getPlayers playerState)) `shouldBe` 0;
-          (length (getLocations playerState)) `shouldBe` 3*3*3;
+        Right gameState -> do {
+          (length (getPlayers gameState)) `shouldBe` 0;
+          (getBounds (getBoard gameState)) `shouldBe` (toBounds [(0,3),(0,3)]);
         }
       }
     }
@@ -42,29 +35,28 @@ gameSpec = do
   describe "_joinGame" $ do
     it "should let a new the player join" $ do {
       let
-        playerState = _initGame [3,3,3] 123;
-        nextPlayerState = _joinGame "johan" playerState;
+        gameState = _initGame (toBounds [(0,3),(0,3)]) 123 3;
+        nextGameState = _joinGame "johan" gameState;
       in do {
-        (length (getPlayers nextPlayerState)) `shouldBe` 1;
+        (length (getPlayers nextGameState)) `shouldBe` 1;
       }
     }
 
   describe "joinGame" $ do
     it "should let a new the player join" $ do {
       let
-        r1 = initGame [3,3,3] 123;
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
         r2 = joinGame (Right "johan") r1;
       in case r2 of {
-        Right playerState -> do {
-          (length (getPlayers playerState)) `shouldBe` 1;
-          (length (getLocations playerState)) `shouldBe` 3*3*3;
+        Right gameState -> do {
+          (length (getPlayers gameState)) `shouldBe` 1;
         }
       }
     }
 
     it "should fail if a player has already joined" $ do {
       let
-        r1 = initGame [3,3,3] 123;
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
         r2 = joinGame (Right "johan") r1;
         r3 = joinGame (Right "lorraine") r2;
       in case r3 of {
@@ -72,26 +64,26 @@ gameSpec = do
       }
     }
 
+
   describe "_getActions" $ do
-    it "should let a new the player join" $ do {
+    it "should get the actions for the player given the state" $ do {
       let
-        ps1 = _initGame [3,3,3] 123;
+        ps1 = _initGame (toBounds [(0,3),(0,3)]) 123 3;
         ps2 = _joinGame "johan" ps1;
-        actions = _getActions "johan" ps2
+        actions = _getActions "johan" ps2;
       in do {
-        (length actions) `shouldBe` 1;
+        (show actions) `shouldBe` "[ActionDef \"swap_with\" [SelectStringDef \"tile\" [\"[2,0]\",\"[0,0]\",\"[1,1]\"] 1 1 False]]";
       }
     }
-
   describe "getActions" $ do
     it "should get the actions for the player for the game state" $ do {
       let
-        r1 = initGame [3,3,3] 123;
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
         r2 = joinGame (Right "johan") r1;
         r3 = getActions (Right "johan") r2;
       in case r3 of {
         Right actions -> do {
-          (show actions) `shouldBe` "[ActionDef \"swap_with\" [SelectStringDef \"tile\" [\"[1,1,2]\",\"[2,2,2]\",\"[2,0,2]\",\"[2,1,1]\"] 1 1 False]]";
+          (show actions) `shouldBe` "[ActionDef \"swap_with\" [SelectStringDef \"tile\" [\"[2,0]\",\"[0,0]\",\"[1,1]\"] 1 1 False]]";
           1 `shouldBe` 1
         }
       }
@@ -99,7 +91,7 @@ gameSpec = do
 
     it "should fail if it request actions for an invalid user" $ do {
       let
-        r1 = initGame [3,3,3] 123;
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
         r2 = joinGame (Right "johan") r1;
         r3 = getActions (Right "lorraine") r2;
       in case r3 of {
@@ -107,27 +99,10 @@ gameSpec = do
       }
     }
 
-  describe "_swapLocations" $ do
-    it "should swap two locations" $ do {
-      let
-        d = [3,3]
-        src = [ Location [0,0] [0,0]  ,
-                Location [0,1] [0,1]  ,
-                Location [1,0] [1,0]  ,
-                Location [1,1] [1,1]  ]
-        swap = _swapLocations src (Location [0,0] [0,0]) (Location [1,1] [1,1])
-      in do {
-        swap !! 0 `shouldBe` Location [1,1] [0,0];
-        swap !! 1 `shouldBe` Location [0,0] [1,1];
-        (length swap) `shouldBe` (length src);
-      }
-    }
-
-
   describe "_applyAction" $ do
     it "should apply the action to the board" $ do {
       let
-        r1 = _initGame [3,3,3] 123;
+        r1 = _initGame (toBounds [(0,3),(0,3)]) 123 3;
         r2 = _joinGame "johan" r1;
         actions = _getActions "johan" r2;
         tileValue = SelectStringValue "tile" ["[1,1,2]"]
@@ -135,5 +110,33 @@ gameSpec = do
         r3 = _applyAction "johan" r2 actionValues
       in do {
         r2 `shouldNotBe` r3;
+      }
+    }
+
+
+  describe "applyAction" $ do
+    it "should apply the action to the board" $ do {
+      let
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
+        r2 = joinGame (Right "johan") r1;
+        actions = getActions (Right "johan") r2;
+        tileValue = SelectStringValue "tile" ["[1,1,2]"]
+        actionValues = [ActionValue "swap_with" [tileValue]]
+        r3 = applyAction (Right "johan") r2 (Right actionValues)
+      in do {
+        r2 `shouldNotBe` r3;
+      }
+    }
+
+    it "should fail if it request actions for an invalid user" $ do {
+      let
+        r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
+        r2 = joinGame (Right "johan") r1;
+        actions = getActions (Right "johan") r2;
+        tileValue = SelectStringValue "tile" ["[1,1,2]"]
+        actionValues = [ActionValue "swap_with" [tileValue]]
+        r3 = applyAction (Right "lorraine") r2 (Right actionValues)
+      in case r3 of {
+        Left e -> e `shouldBe` (InvalidParameter "invalid playerId");
       }
     }
