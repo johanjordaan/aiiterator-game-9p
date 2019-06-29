@@ -11,8 +11,8 @@ import Bound
 import Position
 
 data Board = Board {
-  getBounds::Bounds,
-  getState::PositionMap
+  bounds::Bounds,
+  state::PositionMap
 } deriving (Show, Eq, Generic)
 
 instance ToJSON Board
@@ -33,7 +33,7 @@ shuffleBoard :: Board -> StdGen -> Int -> Board
 shuffleBoard board stdGen 0 = board
 shuffleBoard board stdGen count =
   let
-    zero = take (length (getBounds board)) (repeat 0)
+    zero = take (length (bounds board)) (repeat 0)
     moves = getMoves board zero
     (index,newStdGen) = randomR (0,(length moves)-1) stdGen
     move = moves !! index
@@ -64,4 +64,4 @@ getMoves (Board bounds state) p =
   in Prelude.filter (withinBounds bounds) unfiltered
 
 applyMove :: Board -> Position -> Board
-applyMove board p = swap board p (uniform (getBounds board) 0)
+applyMove board p = swap board p (uniform (bounds board) 0)

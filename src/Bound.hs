@@ -10,8 +10,8 @@ type BoundTuple = (Int,Int)
 type BoundTuples = [BoundTuple]
 
 data Bound = Bound {
-  getLower::Int,
-  getUpper::Int
+  lower::Int,
+  upper::Int
 } deriving (Generic, Show, Eq)
 type Bounds = [Bound]
 

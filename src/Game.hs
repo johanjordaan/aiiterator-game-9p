@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Game where
 
 import Data.List
 import Control.Monad.Except
 import System.Random
 
+import Data.Aeson
+import GHC.Generics
 
 import Position
 import Bound
@@ -17,15 +20,19 @@ data Error = InvalidParameter String deriving (Show, Eq)
 type PlayerId = String
 
 type Moves = Int
-data Player = Player PlayerId Moves deriving (Show, Eq)
+data Player = Player PlayerId Moves deriving (Generic, Show, Eq)
 type Players = [Player]
+
+instance ToJSON Player
+
 
 data GameState = GameState {
   getSeed::Int,
   getPlayers::Players,
   getBoard::Board
-} deriving (Show,Eq)
+} deriving (Generic,Show,Eq)
 
+instance ToJSON GameState
 
 type EPlayerId = Either Error PlayerId
 type EGameState = Either Error GameState
@@ -62,7 +69,7 @@ joinGame ePlayerId eGameState = do {
 _getActions :: PlayerId -> GameState -> ActionDefs
 _getActions playerId (GameState seed players board) =
   let
-    validMoves = getMoves board (uniform (getBounds board) 0)
+    validMoves = getMoves board (uniform (bounds board) 0)
     validMovesStr = map show validMoves
   in [ActionDef "swap_with" [SelectStringDef "tile" validMovesStr 1 1 False]]
 
