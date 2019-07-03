@@ -16,7 +16,7 @@ gameSpec = do
       let
         gameState = _initGame (toBounds [(0,3),(0,3)]) 123 3;
       in do {
-        (length (getPlayers gameState)) `shouldBe` 0;
+        (length (players gameState)) `shouldBe` 0;
       }
     }
 
@@ -26,8 +26,8 @@ gameSpec = do
         r1 = initGame (toBounds [(0,3),(0,3)]) 123 3;
       in case r1 of {
         Right gameState -> do {
-          (length (getPlayers gameState)) `shouldBe` 0;
-          (getBounds (getBoard gameState)) `shouldBe` (toBounds [(0,3),(0,3)]);
+          (length (players gameState)) `shouldBe` 0;
+          (bounds (board gameState)) `shouldBe` (toBounds [(0,3),(0,3)]);
         }
       }
     }
@@ -38,7 +38,7 @@ gameSpec = do
         gameState = _initGame (toBounds [(0,3),(0,3)]) 123 3;
         nextGameState = _joinGame "johan" gameState;
       in do {
-        (length (getPlayers nextGameState)) `shouldBe` 1;
+        (length (players nextGameState)) `shouldBe` 1;
       }
     }
 
@@ -49,7 +49,7 @@ gameSpec = do
         r2 = joinGame (Right "johan") r1;
       in case r2 of {
         Right gameState -> do {
-          (length (getPlayers gameState)) `shouldBe` 1;
+          (length (players gameState)) `shouldBe` 1;
         }
       }
     }

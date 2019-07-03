@@ -12,10 +12,11 @@ type BoundTuples = [BoundTuple]
 data Bound = Bound {
   lower::Int,
   upper::Int
-} deriving (Generic, Show, Eq)
+} deriving (Generic, Eq, Show)
 type Bounds = [Bound]
 
 instance ToJSON Bound
+instance FromJSON Bound
 
 withinBounds :: Bounds -> Position -> Bool
 withinBounds bounds p =

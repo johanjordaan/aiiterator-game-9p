@@ -13,9 +13,10 @@ import Position
 data Board = Board {
   bounds::Bounds,
   state::PositionMap
-} deriving (Show, Eq, Generic)
+} deriving (Generic, Eq, Show)
 
 instance ToJSON Board
+instance FromJSON Board
 
 initialBoard :: Bounds -> Board
 initialBoard bounds = Board bounds empty

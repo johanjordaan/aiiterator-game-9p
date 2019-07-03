@@ -112,8 +112,8 @@ boardSpec = do
         b0 = initialBoard (toBounds [(0,3),(0,3)])
         b = shuffleBoard b0 stdGen 2
       in do {
-        (length (getState b) ) `shouldBe` 3;
-        (show (getState b)) `shouldBe` "fromList [([1,1],[0,1]),([0,1],[0,0]),([0,0],[1,1])]";
+        (length (state b) ) `shouldBe` 3;
+        (show (state b)) `shouldBe` "fromList [([1,1],[0,1]),([0,1],[0,0]),([0,0],[1,1])]";
       }
     }
   }

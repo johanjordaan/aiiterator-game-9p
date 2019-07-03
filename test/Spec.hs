@@ -5,6 +5,7 @@ import BoundSpec
 import BoardSpec
 import ActionSpec
 import GameSpec
+import ServerSpec
 
 main :: IO ()
 main = hspec $ do
@@ -13,3 +14,4 @@ main = hspec $ do
   boardSpec
   actionSpec
   gameSpec
+  serverSpec

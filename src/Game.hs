@@ -15,24 +15,26 @@ import Action
 
 
 type InvalidParameter = String
-data Error = InvalidParameter String deriving (Show, Eq)
+data Error = InvalidParameter String deriving (Eq, Show)
 
 type PlayerId = String
 
 type Moves = Int
-data Player = Player PlayerId Moves deriving (Generic, Show, Eq)
+data Player = Player PlayerId Moves deriving (Generic, Eq, Show)
 type Players = [Player]
 
 instance ToJSON Player
+instance FromJSON Player
 
 
 data GameState = GameState {
-  getSeed::Int,
-  getPlayers::Players,
-  getBoard::Board
-} deriving (Generic,Show,Eq)
+  seed::Int,
+  players::Players,
+  board::Board
+} deriving (Generic, Eq, Show)
 
 instance ToJSON GameState
+instance FromJSON GameState
 
 type EPlayerId = Either Error PlayerId
 type EGameState = Either Error GameState
@@ -60,7 +62,7 @@ joinGame :: EPlayerId -> EGameState -> EGameState
 joinGame ePlayerId eGameState = do {
   playerId <- ePlayerId;
   gameState <- eGameState;
-  if(length (getPlayers gameState) /= 0)
+  if(length (players gameState) /= 0)
     then Left $ (InvalidParameter "already at max (1) players")
     else Right $ _joinGame playerId gameState
 }
@@ -80,7 +82,7 @@ getActions :: EPlayerId -> EGameState -> EActionDefs
 getActions ePlayerId eGameState = do {
   playerId <- ePlayerId;
   gameState <- eGameState;
-  if not (_validPlayer playerId (getPlayers gameState))
+  if not (_validPlayer playerId (players gameState))
     then Left (InvalidParameter "invalid playerId")
     else Right $ _getActions playerId gameState
 }
@@ -92,14 +94,14 @@ _applyAction playerId gameState actionValues =
     SelectStringValue parameterName values = head parameters
     GameState seed players board = gameState
     move = read (values !! 0) :: Position
-  in GameState seed players (applyMove (getBoard gameState) move)
+  in GameState seed players (applyMove board move)
 
 applyAction :: EPlayerId -> EGameState -> EActionValues -> EGameState
 applyAction ePlayerId eGameState eActionValues = do {
   playerId <- ePlayerId;
   gameState <- eGameState;
   actionValues <- eActionValues;
-  if not (_validPlayer playerId (getPlayers gameState))
+  if not (_validPlayer playerId (players gameState))
     then Left (InvalidParameter "invalid playerId")
     else Right $ _applyAction playerId gameState actionValues
 }

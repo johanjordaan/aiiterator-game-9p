@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - scotty
 - http-types
+- wai
 - text
 - aeson
 - array
@@ -55,3 +56,4 @@ tests:
     dependencies:
     - aiiterator-game-9p
     - hspec
+    - hspec-wai
